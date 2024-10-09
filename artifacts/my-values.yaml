@@ -1,0 +1,41 @@
+global:
+  openshift: false # If running on openshift, set to true
+  spire:
+    recommendations:
+      enabled: true
+    namespaces:
+      create: true
+    ingressControllerType: "ingress-nginx" # If not openshift, and want to expose services, set to a supported option [ingress-nginx]
+    # Update these
+    clusterName: mc-zt-01
+    trustDomain: paraglide.org
+    caSubject:
+      country: US
+      organization: paraglide
+      commonName: paraglide.org
+    tools:
+      kubectl:
+        tag: "v1.23.3"
+spire-server:
+spire-server:
+  ingress:
+    enabled: true
+  controllerManager:
+    ignoreNamespaces:
+      - kube-system
+      - kube-public
+      - local-path-storage
+      - openshift-.*
+spire-frontend:
+  logsDir: "/opt/app-root/src/.npm/_cacache/"
+spiffe-oidc-discovery-provider:
+  enabled: true
+  # SPIRE Root CA is currently set to rotate every 2h
+  # this means the thumbprint for OIDC needs to be updated frequently
+  # the quick fix is to disable the TLS on SPIRE:
+  tls:
+    spire:
+      enabled: false
+  ingress:
+    enabled: true
+    tlsSecret: nginx-spire-secret
