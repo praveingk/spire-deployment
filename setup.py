@@ -9,6 +9,7 @@ import urllib.request
 import os
 import base64
 from datetime import datetime
+import yaml
 
 def run_command(command, cwd="."):
     """
@@ -107,6 +108,17 @@ def deploy_nginx_ingress(k3s_client):
     # Download the YAML content
     response = urllib.request.urlopen(url)
     yaml_content = response.read().decode('utf-8')
+
+    resources = yaml.safe_load(yaml_content)
+
+    # Find the Deployment resource and add the args
+    for item in resources['items']:
+        if item['kind'] == 'Deployment' and item['metadata']['name'] == 'ingress-nginx-controller':
+            container = item['spec']['template']['spec']['containers'][0]
+            if 'args' not in container:
+                container['args'] = []
+            container['args'].append('--enable-ssl-passthrough')
+            
     # Save the content to a temporary file
     with open("deploy.yaml", "w") as f:
         f.write(yaml_content)
@@ -363,8 +375,9 @@ if __name__ == "__main__":
 
     node_ip = get_node_ip(k3s_client, hostname)
     add_entries_to_hosts(node_ip)
-    install_nginx()
-    setup_nginx()
+    # Not necessary to install nginx 
+    # install_nginx()
+    # setup_nginx()
 
     time.sleep(10)
     print("Testing connectivity..")
